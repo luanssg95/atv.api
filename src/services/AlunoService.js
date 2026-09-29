@@ -96,6 +96,21 @@ class AlunoService{
         }
     }
 
+    async remove(id){
+        const alunoId = Number(id);
+        const alunoExistente = await prisma.aluno.findUnique({ where: { id: alunoId } });
+
+        if (!alunoExistente) {
+            throw new AlunoNaoEncontradoError();
+        }
+
+        await prisma.aluno.delete({
+            where: { id: alunoId }
+        });
+
+        return true;
+    }
+
 }
 
 module.exports = new AlunoService();
