@@ -51,6 +51,51 @@ class AlunoService{
 
         return novoAluno;
     }
+
+    async update(id, dados){
+        const alunoId = Number(id);
+        const alunoExistente = await prisma.aluno.findUnique({ where: { id: alunoId } });
+
+        if (!alunoExistente) {
+            throw new AlunoNaoEncontradoError();
+        }
+
+        const dadosValidos = {};
+        if (dados && typeof dados === 'object') {
+            if (dados.nome !== undefined) {
+                const nome = String(dados.nome).trim();
+                if (!nome) {
+                    throw new AlunoInvalidoError("Nome inválido.");
+                }
+                dadosValidos.nome = nome;
+            }
+
+            if (dados.email !== undefined) {
+                const email = String(dados.email).trim();
+                if (!email) {
+                    throw new AlunoInvalidoError("Email inválido.");
+                }
+                dadosValidos.email = email;
+            }
+        }
+
+        if (Object.keys(dadosValidos).length === 0) {
+            throw new AlunoInvalidoError("Informe nome ou email válidos para atualizar.");
+        }
+
+        try {
+            return await prisma.aluno.update({
+                where: { id: alunoId },
+                data: dadosValidos
+            });
+        } catch (error) {
+            if (error.code === 'P2002') {
+                throw new AlunoInvalidoError("Email já cadastrado para outro aluno.");
+            }
+            throw error;
+        }
+    }
+
 }
 
 module.exports = new AlunoService();
